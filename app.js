@@ -36,6 +36,10 @@ class Tree {
     return root;
   }
 
+  #defaultTraversalFnc(n) {
+    return n;
+  }
+
   insert(val, root = this.root) {
     // compare val to root.data. if it's smaller, move left. if it's bigger, move right.
     // do it again until left and right of root are null
@@ -111,37 +115,118 @@ class Tree {
     }
   }
 
-  levelOrderTraversal(fnc = (n) => console.log(n)) {
+  levelOrderTraversal(fnc = this.#defaultTraversalFnc) {
+    let arr = [];
     if (this.root == null) return;
     let queue = [];
     queue.push(this.root);
     while (queue.length > 0) {
       let currentNode = queue[0];
-      fnc(currentNode.data);
+      arr.push(fnc(currentNode.data));
       if (currentNode.left != null) queue.push(currentNode.left);
       if (currentNode.right != null) queue.push(currentNode.right);
       queue.shift();
     }
+    return arr;
   }
 
-  preorder(fnc = (n) => console.log(n), node = this.root) {
+  preorder(fnc = this.#defaultTraversalFnc, node = this.root, result = []) {
     if (node == null) return;
-    fnc(node.data);
-    this.preorder(fnc, node.left);
-    this.preorder(fnc, node.right);
+    result.push(fnc(node.data));
+    this.preorder(fnc, node.left, result);
+    this.preorder(fnc, node.right, result);
+    return result;
   }
 
-  inorder(fnc = (n) => console.log(n), node = this.root) {
+  inorder(fnc = this.#defaultTraversalFnc, node = this.root, result = []) {
     if (node == null) return;
-    this.inorder(fnc, node.left);
-    fnc(node.data);
-    this.inorder(fnc, node.right);
+    this.inorder(fnc, node.left, result);
+    result.push(fnc(node.data));
+    this.inorder(fnc, node.right, result);
+    return result;
   }
 
-  postorder(fnc = (n) => console.log(n), node = this.root) {
+  postorder(fnc = this.#defaultTraversalFnc, node = this.root, result = []) {
     if (node == null) return;
-    this.postorder(fnc, node.left);
-    this.postorder(fnc, node.right);
-    fnc(node.data);
+    this.postorder(fnc, node.left, result);
+    this.postorder(fnc, node.right, result);
+    result.push(fnc(node.data));
+    return result;
+  }
+
+  depth(node, root = this.root) {
+    if (root === null) return -1;
+    if (root === node) return 0;
+    let left = this.depth(node, root.left);
+    if (left > -1) {
+      return 1 + left;
+    }
+    let right = this.depth(node, root.right);
+    if (right > -1) {
+      return 1 + right;
+    }
+
+    return -1;
+  }
+
+  height(node) {
+    if (node === null) return -1;
+    let left = this.height(node.left);
+    let right = this.height(node.right);
+    return Math.max(left, right) + 1;
+  }
+
+  isBalanced(node = this.root) {
+    // A balanced tree is one where the difference between heights of left subtree and right subtree of every node is not more than 1.
+    if (node === null) return;
+    let diff = Math.abs(this.height(node.left) - this.height(node.right));
+    if (diff <= 1) {
+      this.isBalanced(node.left);
+      this.isBalanced(node.right);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  reBalance() {
+    if (!this.isBalanced()) {
+      let treeArr = [];
+      this.inorder((n) => treeArr.push(n));
+      this.root = this.buildTree(treeArr);
+    }
   }
 }
+
+function randomArr() {
+  let arr = [];
+  for (let i = 0; i < 20; i++) {
+    arr.push(Math.floor(Math.random() * 100));
+  }
+  return arr;
+}
+
+function randomGreaterThan100() {
+  return 100 + Math.floor(Math.random() * 50);
+}
+
+(function Main() {
+  let tree = new Tree(randomArr());
+  prettyPrint(tree.root);
+  console.log("Tree is balanced: ", tree.isBalanced());
+  console.log("Level Order: ", tree.levelOrderTraversal());
+  console.log("Inorder: ", tree.inorder());
+  console.log("Preorder: ", tree.preorder());
+  console.log("Postorder: ", tree.postorder());
+  for (let i = 0; i < 6; i++) {
+    tree.insert(randomGreaterThan100());
+  }
+  console.log("Tree is balanced: ", tree.isBalanced());
+  tree.reBalance();
+  console.log("Tree is balanced: ", tree.isBalanced());
+  prettyPrint(tree.root);
+  console.log("Level Order: ", tree.levelOrderTraversal());
+  console.log("Inorder: ", tree.inorder());
+  console.log("Preorder: ", tree.preorder());
+  console.log("Postorder: ", tree.postorder());
+})();
